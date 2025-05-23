@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Dashboard - Spreadsheet Style</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        nav {
+            background: white;
+            padding: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav button {
+            background: transparent;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        nav button:hover {
+            background-color: #f8f9fa;
+            color: #3498db;
+        }
+
+        nav button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background-color: #f8f9fa;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .spreadsheet {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .spreadsheet th {
+            background: #34495e;
+            color: white;
+            padding: 1rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-right: 1px solid #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .spreadsheet th:last-child {
+            border-right: none;
+        }
+
+        .spreadsheet td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #ecf0f1;
+            border-right: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .spreadsheet td:last-child {
+            border-right: none;
+        }
+
+        .spreadsheet tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .spreadsheet tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+
+        .spreadsheet tr:nth-child(even):hover {
+            background-color: #f1f3f4;
+        }
+
+        .editable {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 0.4rem;
+            width: 100%;
+            font-size: 0.9rem;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .editable:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .editable-select {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 0.4rem;
+            width: 100%;
+            font-size: 0.9rem;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .editable-select:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-ideation { background: #e3f2fd; color: #1565c0; }
+        .status-data-collection { background: #f3e5f5; color: #7b1fa2; }
+        .status-drafting { background: #fff3e0; color: #ef6c00; }
+        .status-ready { background: #e8f5e8; color: #2e7d32; }
+        .status-submitted { background: #fff8e1; color: #f57f17; }
+        .status-under-review { background: #e1f5fe; color: #0277bd; }
+        .status-revise { background: #fce4ec; color: #c2185b; }
+        .status-accepted { background: #e8f5e8; color: #1b5e20; }
+        .status-rejected { background: #ffebee; color: #c62828; }
+
+        .progress-cell {
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .add-row-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-row-btn:hover {
+            background: #229954;
+        }
+
+        /* Analytics Styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+
+        .metric-card.success { border-left-color: #27ae60; }
+        .metric-card.warning { border-left-color: #f39c12; }
+        .metric-card.danger { border-left-color: #e74c3c; }
+
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive { color: #27ae60; }
+        .metric-change.negative { color: #e74c3c; }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .full-width-chart {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+            }
+
+            nav button {
+                width: 100%;
+                text-align: center;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .spreadsheet {
+                font-size: 0.8rem;
+            }
+
+            .spreadsheet th,
+            .spreadsheet td {
+                padding: 0.5rem 0.3rem;
+            }
+        }
+
+        .insights-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .insights-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .insight-item {
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #3498db;
+        }
+
+        .insight-item.warning {
+            border-left-color: #f39c12;
+            background: #fef9e7;
+        }
+
+        .insight-item.success {
+            border-left-color: #27ae60;
+            background: #eafaf1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📊 Research Dashboard</h1>
+        <p>Spreadsheet-style research tracking and analytics</p>
+    </header>
+
+    <nav>
+        <div class="nav-container">
+            <button class="tab active" data-tab="papers">📝 My Papers</button>
+            <button class="tab" data-tab="special-issues">📚 Special Issues</button>
+            <button class="tab" data-tab="analytics">📈 Analytics</button>
+        </div>
+    </nav>
+
+    <main>
+        <section id="papers" class="tab-content active">
+            <div class="section-header">
+                <h2>My Research Papers</h2>
+                <div>
+                    <button class="btn btn-success" onclick="exportToCSV('papers')">📥 Export CSV</button>
+                    <button class="btn" onclick="addNewPaper()">➕ Add Paper</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="spreadsheet" id="papers-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Paper Title</th>
+                            <th style="width: 15%;">Coauthors</th>
+                            <th style="width: 12%;">Status</th>
+                            <th style="width: 8%;">Progress</th>
+                            <th style="width: 12%;">Journal</th>
+                            <th style="width: 10%;">Submission Date</th>
+                            <th style="width: 10%;">Last Updated</th>
+                            <th style="width: 8%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="papers-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="special-issues" class="tab-content">
+            <div class="section-header">
+                <h2>Special Issues Tracker</h2>
+                <div>
+                    <button class="btn btn-success" onclick="exportToCSV('issues')">📥 Export CSV</button>
+                    <button class="btn" onclick="addNewSpecialIssue()">➕ Add Issue</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="spreadsheet" id="issues-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Journal</th>
+                            <th style="width: 25%;">Theme/Topic</th>
+                            <th style="width: 12%;">Deadline</th>
+                            <th style="width: 20%;">Call for Papers Link</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 10%;">Priority</th>
+                            <th style="width: 8%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issues-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="analytics" class="tab-content">
+            <div class="section-header">
+                <h2>Research Analytics & Insights</h2>
+                <button class="btn" onclick="refreshAnalytics()">🔄 Refresh</button>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="analytics-grid">
+                <div class="metric-card">
+                    <span class="metric-number" id="total-papers">0</span>
+                    <div class="metric-label">Total Papers</div>
+                </div>
+                <div class="metric-card success">
+                    <span class="metric-number" id="acceptance-rate">0%</span>
+                    <div class="metric-label">Acceptance Rate</div>
+                </div>
+                <div class="metric-card warning">
+                    <span class="metric-number" id="avg-review-time">0</span>
+                    <div class="metric-label">Avg Review Time (days)</div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-number" id="papers-in-progress">0</span>
+                    <div class="metric-label">Papers in Progress</div>
+                </div>
+                <div class="metric-card danger">
+                    <span class="metric-number" id="revision-rate">0%</span>
+                    <div class="metric-label">Revision Rate</div>
+                </div>
+                <div class="metric-card success">
+                    <span class="metric-number" id="avg-progress">0%</span>
+                    <div class="metric-label">Average Progress</div>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insights-section">
+                <h3>🧠 AI-Powered Insights</h3>
+                <div id="insights-container">
+                    <!-- Insights will be generated here -->
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>📊 Papers by Status</h3>
+                    <canvas id="status-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>📈 Submission Timeline</h3>
+                    <canvas id="timeline-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>⏱️ Review Duration Analysis</h3>
+                    <canvas id="review-duration-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>🎯 Success Rate by Journal</h3>
+                    <canvas id="journal-success-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card full-width-chart">
+                <h3>📅 Research Productivity Calendar</h3>
+                <canvas id="productivity-chart"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Data storage (in-memory since localStorage is not supported in this environment)
+        let papers = [];
+        let specialIssues = [];
+        let nextPaperId = 1;
+        let nextSpecialIssueId = 1;
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'analytics') {
+                    setTimeout(renderAnalytics, 100);
+                }
+            });
+        });
+
+        // Status options
+        const statusOptions = [
+            'In Ideation',
+            'Collecting Data',
+            'Drafting',
+            'Ready for Submission',
+            'Submitted',
+            'Under Review',
+            'Revise and Resubmit',
+            'Accepted',
+            'Rejected'
+        ];
+
+        const issueStatusOptions = [
+            'Interested',
+            'Planning to Apply',
+            'Applied',
+            'Accepted',
+            'Rejected'
+        ];
+
+        const priorityOptions = [
+            'High',
+            'Medium',
+            'Low'
+        ];
+
+        function getStatusClass(status) {
+            const statusMap = {
+                'in ideation': 'ideation',
+                'collecting data': 'data-collection',
+                'drafting': 'drafting',
+                'ready for submission': 'ready',
+                'submitted': 'submitted',
+                'under review': 'under-review',
+                'revise and resubmit': 'revise',
+                'accepted': 'accepted',
+                'rejected': 'rejected'
+            };
+            return statusMap[status.toLowerCase()] || 'ideation';
+        }
+
+        // Render papers table
+        function renderPapersTable() {
+            const tbody = document.getElementById('papers-tbody');
+            tbody.innerHTML = '';
+
+            papers.forEach(paper => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" class="editable" value="${paper.title}" onchange="updatePaper(${paper.id}, 'title', this.value)"></td>
+                    <td><input type="text" class="editable" value="${paper.coauthors || ''}" onchange="updatePaper(${paper.id}, 'coauthors', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updatePaper(${paper.id}, 'status', this.value)">
+                            ${statusOptions.map(option => 
+                                `<option value="${option}" ${paper.status === option ? 'selected' : ''}>${option}</option>`
+                            ).join('')}
+                        </select>
+                    </td>
+                    <td class="progress-cell">
+                        <input type="number" class="editable" style="text-align: center;" value="${paper.progress}" min="0" max="100" onchange="updatePaper(${paper.id}, 'progress', parseInt(this.value))">%
+                    </td>
+                    <td><input type="text" class="editable" value="${paper.journal || ''}" onchange="updatePaper(${paper.id}, 'journal', this.value)"></td>
+                    <td><input type="date" class="editable" value="${paper.submissionDate || ''}" onchange="updatePaper(${paper.id}, 'submissionDate', this.value)"></td>
+                    <td style="font-size: 0.8rem; color: #7f8c8d;">${paper.lastUpdated || new Date().toLocaleDateString()}</td>
+                    <td><button class="delete-btn" onclick="deletePaper(${paper.id})">🗑️</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render special issues table
+        function renderSpecialIssuesTable() {
+            const tbody = document.getElementById('issues-tbody');
+            tbody.innerHTML = '';
+
+            specialIssues.forEach(issue => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" class="editable" value="${issue.journal}" onchange="updateSpecialIssue(${issue.id}, 'journal', this.value)"></td>
+                    <td><input type="text" class="editable" value="${issue.theme}" onchange="updateSpecialIssue(${issue.id}, 'theme', this.value)"></td>
+                    <td><input type="date" class="editable" value="${issue.deadline}" onchange="updateSpecialIssue(${issue.id}, 'deadline', this.value)"></td>
+                    <td><input type="url" class="editable" value="${issue.link || ''}" onchange="updateSpecialIssue(${issue.id}, 'link', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateSpecialIssue(${issue.id}, 'status', this.value)">
+                            ${issueStatusOptions.map(option => 
+                                `<option value="${option}" ${issue.status === option ? 'selected' : ''}>${option}</option>`
+                            ).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="editable-select" onchange="updateSpecialIssue(${issue.id}, 'priority', this.value)">
+                            ${priorityOptions.map(option => 
+                                `<option value="${option}" ${issue.priority === option ? 'selected' : ''}>${option}</option>`
+                            ).join('')}
+                        </select>
+                    </td>
+                    <td><button class="delete-btn" onclick="deleteSpecialIssue(${issue.id})">🗑️</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update functions
+        function updatePaper(id, field, value) {
+            const paper = papers.find(p => p.id === id);
+            if (paper) {
+                paper[field] = value;
+                paper.lastUpdated = new Date().toLocaleDateString();
+                savePapers();
+            }
+        }
+
+        function updateSpecialIssue(id, field, value) {
+            const issue = specialIssues.find(s => s.id === id);
+            if (issue) {
+                issue[field] = value;
+                saveSpecialIssues();
+            }
+        }
+
+        // Add new functions
+        function addNewPaper() {
+            const newPaper = {
+                id: nextPaperId++,
+                title: 'New Paper Title',
+                coauthors: '',
+                status: 'In Ideation',
+                progress: 0,
+                journal: '',
+                submissionDate: '',
+                lastUpdated: new Date().toLocaleDateString()
+            };
+            papers.push(newPaper);
+            savePapers();
+            renderPapersTable();
+        }
+
+        function addNewSpecialIssue() {
+            const newIssue = {
+                id: nextSpecialIssueId++,
+                journal: 'Journal Name',
+                theme: 'Special Issue Theme',
+                deadline: '',
+                link: '',
+                status: 'Interested',
+                priority: 'Medium'
+            };
+            specialIssues.push(newIssue);
+            saveSpecialIssues();
+            renderSpecialIssuesTable();
+        }
+
+        // Delete functions
+        function deletePaper(id) {
+            if (confirm('Are you sure you want to delete this paper?')) {
+                papers = papers.filter(p => p.id !== id);
+                savePapers();
+                renderPapersTable();
+            }
+        }
+
+        function deleteSpecialIssue(id) {
+            if (confirm('Are you sure you want to delete this special issue?')) {
+                specialIssues = specialIssues.filter(s => s.id !== id);
+                saveSpecialIssues();
+                renderSpecialIssuesTable();
+            }
+        }
+
+        // Data persistence
+        function savePapers() {
+            localStorage.setItem('papers', JSON.stringify(papers));
+        }
+
+        function saveSpecialIssues() {
+            localStorage.setItem('specialIssues', JSON.stringify(specialIssues));
+        }
+
+        // Export to CSV
+        function exportToCSV(type) {
+            let data, filename;
+            
+            if (type === 'papers') {
+                data = papers;
+                filename = 'research_papers.csv';
+            } else {
+                data = specialIssues;
+                filename = 'special_issues.csv';
+            }
+
+            if (data.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Analytics functions
+        function renderAnalytics() {
+            updateMetrics();
+            generateInsights();
+            renderStatusChart();
+            renderTimelineChart();
+            renderReviewDurationChart();
+            renderJournalSuccessChart();
+            renderProductivityChart();
+        }
+
+        function updateMetrics() {
+            const total = papers.length;
+            const accepted = papers.filter(p => p.status === 'Accepted').length;
+            const submitted = papers.filter(p => p.status === 'Submitted' || p.status === 'Under Review').length;
+            const inProgress = papers.filter(p => !['Accepted', 'Rejected'].includes(p.status)).length;
+            const revisions = papers.filter(p => p.status === 'Revise and Resubmit').length;
+            
+            const acceptanceRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
+            const revisionRate = total > 0 ? Math.round((revisions / total) * 100) : 0;
+            const avgProgress = total > 0 ? Math.round(papers.reduce((sum, p) => sum + p.progress, 0) / total) : 0;
+
+            // Calculate average review time
+            const reviewTimes = papers
+                .filter(p => p.submissionDate && (p.status === 'Accepted' || p.status === 'Rejected'))
+                .map(p => {
+                    const submissionDate = new Date(p.submissionDate);
+                    const now = new Date();
+                    return Math.floor((now - submissionDate) / (1000 * 60 * 60 * 24));
+                });
+            
+            const avgReviewTime = reviewTimes.length > 0 ? 
+                Math.round(reviewTimes.reduce((sum, time) => sum + time, 0) / reviewTimes.length) : 0;
+
+            document.getElementById('total-papers').textContent = total;
+            document.getElementById('acceptance-rate').textContent = acceptanceRate + '%';
+            document.getElementById('avg-review-time').textContent = avgReviewTime;
+            document.getElementById('papers-in-progress').textContent = inProgress;
+            document.getElementById('revision-rate').textContent = revisionRate + '%';
+            document.getElementById('avg-progress').textContent = avgProgress + '%';
+        }
+
+        function generateInsights() {
+            const container = document.getElementById('insights-container');
+            const insights = [];
+
+            // Generate insights based on data
+            const total = papers.length;
+            const accepted = papers.filter(p => p.status === 'Accepted').length;
+            const rejected = papers.filter(p => p.status === 'Rejected').length;
+            const inProgress = papers.filter(p => !['Accepted', 'Rejected'].includes(p.status)).length;
+
+            if (total > 0) {
+                if (accepted / total >= 0.7) {
+                    insights.push({
+                        type: 'success',
+                        text: `🎉 Excellent work! You have a ${Math.round((accepted/total)*100)}% acceptance rate, which is above average in academia.`
+                    });
+                } else if (accepted / total <= 0.3 && total >= 3) {
+                    insights.push({
+                        type: 'warning',
+                        text: `📈 Consider reviewing your submission strategy. Your current acceptance rate is ${Math.round((accepted/total)*100)}%.`
+                    });
+                }
+
+                if (inProgress > total * 0.6) {
+                    insights.push({
+                        type: 'warning',
+                        text: `⚠️ You have ${inProgress} papers in progress. Consider focusing on completing some before starting new ones.`
+                    });
+                }
+
+                const lowProgressPapers = papers.filter(p => p.progress < 30 && !['Accepted', 'Rejected'].includes(p.status)).length;
+                if (lowProgressPapers > 0) {
+                    insights.push({
+                        type: 'warning',
+                        text: `🔄 ${lowProgressPapers} papers have less than 30% progress. These might need attention to move forward.`
+                    });
+                }
+            }
+
+            // Special issues insights
+            const upcomingDeadlines = specialIssues.filter(issue => {
+                const deadline = new Date(issue.deadline);
+                const daysUntil = (deadline - new Date()) / (1000 * 60 * 60 * 24);
+                return daysUntil > 0 && daysUntil <= 30;
+            }).length;
+
+            if (upcomingDeadlines > 0) {
+                insights.push({
+                    type: 'warning',
+                    text: `⏰ ${upcomingDeadlines} special issue deadline(s) coming up in the next 30 days.`
+                });
+            }
+
+            if (insights.length === 0) {
+                insights.push({
+                    type: 'success',
+                    text: '✨ Your research pipeline looks good! Keep up the great work.'
+                });
+            }
+
+            container.innerHTML = insights.map(insight => 
+                `<div class="insight-item ${insight.type}">${insight.text}</div>`
+            ).join('');
+        }
+
+        function renderStatusChart() {
+            const ctx = document.getElementById('status-chart').getContext('2d');
+            
+            const statusCounts = statusOptions.reduce((acc, status) => {
+                acc[status] = papers.filter(p => p.status === status).length;
+                return acc;
+            }, {});
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts).filter(status => statusCounts[status] > 0),
+                    datasets: [{
+                        data: Object.values(statusCounts).filter(count => count > 0),
+                        backgroundColor: [
+                            '#3498db', '#e74c3c', '#f39c12', '#27ae60',
+                            '#9b59b6', '#1abc9c', '#34495e', '#e67e22', '#95a5a6'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTimelineChart() {
+            const ctx = document.getElementById('timeline-chart').getContext('2d');
+            
+            // Group submissions by month
+            const monthlyData = {};
+            papers.forEach(paper => {
+                if (paper.submissionDate) {
+                    const date = new Date(paper.submissionDate);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = { submitted: 0, accepted: 0 };
+                    }
+                    monthlyData[monthKey].submitted++;
+                    if (paper.status === 'Accepted') {
+                        monthlyData[monthKey].accepted++;
+                    }
+                }
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const submittedData = sortedMonths.map(month => monthlyData[month].submitted);
+            const acceptedData = sortedMonths.map(month => monthlyData[month].accepted);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: 'Submitted',
+                        data: submittedData,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Accepted',
+                        data: acceptedData,
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderReviewDurationChart() {
+            const ctx = document.getElementById('review-duration-chart').getContext('2d');
+            
+            const reviewDurations = papers
+                .filter(p => p.submissionDate && (p.status === 'Accepted' || p.status === 'Rejected'))
+                .map(p => {
+                    const submissionDate = new Date(p.submissionDate);
+                    const now = new Date();
+                    const days = Math.floor((now - submissionDate) / (1000 * 60 * 60 * 24));
+                    return { paper: p.title.substring(0, 20) + '...', days, status: p.status };
+                });
+
+            if (reviewDurations.length === 0) {
+                ctx.canvas.parentNode.innerHTML = '<div style="text-align: center; padding: 2rem; color: #7f8c8d;">No completed reviews yet</div>';
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: reviewDurations.map(r => r.paper),
+                    datasets: [{
+                        label: 'Review Duration (days)',
+                        data: reviewDurations.map(r => r.days),
+                        backgroundColor: reviewDurations.map(r => r.status === 'Accepted' ? '#27ae60' : '#e74c3c'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Days'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderJournalSuccessChart() {
+            const ctx = document.getElementById('journal-success-chart').getContext('2d');
+            
+            const journalStats = {};
+            papers.forEach(paper => {
+                if (paper.journal && (paper.status === 'Accepted' || paper.status === 'Rejected')) {
+                    if (!journalStats[paper.journal]) {
+                        journalStats[paper.journal] = { submitted: 0, accepted: 0 };
+                    }
+                    journalStats[paper.journal].submitted++;
+                    if (paper.status === 'Accepted') {
+                        journalStats[paper.journal].accepted++;
+                    }
+                }
+            });
+
+            const journals = Object.keys(journalStats);
+            const successRates = journals.map(journal => 
+                Math.round((journalStats[journal].accepted / journalStats[journal].submitted) * 100)
+            );
+
+            if (journals.length === 0) {
+                ctx.canvas.parentNode.innerHTML = '<div style="text-align: center; padding: 2rem; color: #7f8c8d;">No journal data available</div>';
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: journals.map(j => j.length > 15 ? j.substring(0, 15) + '...' : j),
+                    datasets: [{
+                        label: 'Success Rate (%)',
+                        data: successRates,
+                        backgroundColor: successRates.map(rate => 
+                            rate >= 70 ? '#27ae60' : rate >= 40 ? '#f39c12' : '#e74c3c'
+                        ),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Success Rate (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderProductivityChart() {
+            const ctx = document.getElementById('productivity-chart').getContext('2d');
+            
+            // Create productivity data for the last 12 months
+            const monthlyProductivity = {};
+            const today = new Date();
+            
+            // Initialize last 12 months
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthlyProductivity[monthKey] = {
+                    started: 0,
+                    submitted: 0,
+                    accepted: 0,
+                    progress: 0
+                };
+            }
+
+            // Fill with actual data
+            papers.forEach(paper => {
+                if (paper.submissionDate) {
+                    const date = new Date(paper.submissionDate);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    if (monthlyProductivity[monthKey]) {
+                        monthlyProductivity[monthKey].submitted++;
+                        if (paper.status === 'Accepted') {
+                            monthlyProductivity[monthKey].accepted++;
+                        }
+                    }
+                }
+            });
+
+            const months = Object.keys(monthlyProductivity).sort();
+            const submittedData = months.map(month => monthlyProductivity[month].submitted);
+            const acceptedData = months.map(month => monthlyProductivity[month].accepted);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months.map(month => {
+                        const [year, monthNum] = month.split('-');
+                        const date = new Date(year, monthNum - 1);
+                        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                    }),
+                    datasets: [{
+                        label: 'Submitted',
+                        data: submittedData,
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: '#3498db',
+                        borderWidth: 1
+                    }, {
+                        label: 'Accepted',
+                        data: acceptedData,
+                        backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                        borderColor: '#27ae60',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function refreshAnalytics() {
+            renderAnalytics();
+        }
+
+        // Initialize with sample data if empty
+        function initializeData() {
+            if (papers.length === 0) {
+                papers = [
+                    {
+                        id: 1,
+                        title: "Deep Learning Approaches for Medical Image Analysis",
+                        coauthors: "Dr. Sarah Johnson, Dr. Michael Chen, Prof. Emily Davis",
+                        status: "Under Review",
+                        progress: 85,
+                        journal: "Nature Medicine",
+                        submissionDate: "2024-10-15",
+                        lastUpdated: "2024-11-20"
+                    },
+                    {
+                        id: 2,
+                        title: "Quantum Computing Applications in Cryptography",
+                        coauthors: "Dr. Alex Rodriguez, Prof. Lisa Zhang",
+                        status: "Accepted",
+                        progress: 100,
+                        journal: "IEEE Transactions on Quantum Engineering",
+                        submissionDate: "2024-08-20",
+                        lastUpdated: "2024-11-18"
+                    },
+                    {
+                        id: 3,
+                        title: "Climate Change Impact on Agricultural Productivity",
+                        coauthors: "Dr. James Wilson, Dr. Maria Gonzalez, Dr. Robert Kim",
+                        status: "Revise and Resubmit",
+                        progress: 75,
+                        journal: "Environmental Research Letters",
+                        submissionDate: "2024-09-10",
+                        lastUpdated: "2024-11-15"
+                    },
+                    {
+                        id: 4,
+                        title: "Blockchain Technology in Supply Chain Management",
+                        coauthors: "Dr. David Brown, Prof. Anna Lee",
+                        status: "Drafting",
+                        progress: 45,
+                        journal: "",
+                        submissionDate: "",
+                        lastUpdated: "2024-11-22"
+                    },
+                    {
+                        id: 5,
+                        title: "AI Ethics in Autonomous Vehicle Decision Making",
+                        coauthors: "Prof. Jessica Taylor, Dr. Mohammed Ali",
+                        status: "Rejected",
+                        progress: 70,
+                        journal: "Journal of AI Ethics",
+                        submissionDate: "2024-07-30",
+                        lastUpdated: "2024-09-15"
+                    }
+                ];
+
+                specialIssues = [
+                    {
+                        id: 1,
+                        journal: "IEEE Transactions on AI",
+                        theme: "Explainable AI in Healthcare",
+                        deadline: "2025-06-30",
+                        link: "https://ieee.org/tai/cfp-explainable-ai",
+                        status: "Planning to Apply",
+                        priority: "High"
+                    },
+                    {
+                        id: 2,
+                        journal: "Nature Computational Science",
+                        theme: "Quantum Machine Learning",
+                        deadline: "2025-08-15",
+                        link: "https://nature.com/ncomputsci/cfp",
+                        status: "Interested",
+                        priority: "Medium"
+                    },
+                    {
+                        id: 3,
+                        journal: "Science Advances",
+                        theme: "Climate Modeling and Prediction",
+                        deadline: "2025-05-20",
+                        link: "https://science.org/sciadv/cfp",
+                        status: "Applied",
+                        priority: "High"
+                    }
+                ];
+
+                nextPaperId = 6;
+                nextSpecialIssueId = 4;
+                savePapers();
+                saveSpecialIssues();
+            }
+        }
+
+        // Initialize dashboard
+        function init() {
+            initializeData();
+            renderPapersTable();
+            renderSpecialIssuesTable();
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
